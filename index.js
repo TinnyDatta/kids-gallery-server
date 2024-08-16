@@ -27,6 +27,41 @@ async function run() {
 
    const productsCollection = client.db('productsDB').collection('product');
 
+  //  get all products from db
+  // app.get('/product', async(req, res) => {
+  //   let size = parseInt(req.query.size) || 6
+  //   let page = parseInt(req.query.page) || 1
+  //   let skip = (page - 1) * size
+  //   const filter = req.query;
+  //   const search = filter.search ? String(filter.search) : '';
+  //   const query = {
+  //     className: {$regex: search, $options: 'i'}
+  //   }
+  //   const result = await productsCollection.find(query).skip(skip).limit(size).toArray();
+  //   res.send(result);
+  // })
+  app.get('/product', async (req, res) => {
+    let size = parseInt(req.query.size) || 6;
+    let page = parseInt(req.query.page) || 1;
+    let skip = (page - 1) * size;
+    const filter = req.query;
+    const search = filter.search ? String(filter.search) : '';
+    
+    // Adjust 'category' to the field you're searching by.
+    const query = {
+      category: { $regex: search, $options: 'i' } // Case-insensitive search
+    };
+    
+    const result = await productsCollection.find(query).skip(skip).limit(size).toArray();
+    res.send(result);
+  });
+  
+
+  app.get('/product-count', async(req, res) => {
+    const count = await productsCollection.estimatedDocumentCount();
+    res.send({count});
+  })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");

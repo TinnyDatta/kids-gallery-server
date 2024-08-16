@@ -33,13 +33,18 @@ async function run() {
     let page = parseInt(req.query.page) || 1;
     let skip = (page - 1) * size;
     const search = req.query.search ? String(req.query.search) : '';
-
+    const filter = req.query;
     const query = search 
         ? { productName: { $regex: search, $options: 'i' } } 
         : {};
+    const options = {
+      sort: {
+        price: filter.sort === 'asc' ? 1: -1
+      }
+    }
 
     try {
-        const result = await productsCollection.find(query).skip(skip).limit(size).toArray();
+        const result = await productsCollection.find(query, options).skip(skip).limit(size).toArray();
         res.send(result);
     } catch (error) {
         console.error("Failed to fetch products:", error);

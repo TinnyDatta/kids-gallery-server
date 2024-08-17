@@ -28,38 +28,13 @@ async function run() {
    const productsCollection = client.db('productsDB').collection('product');
 
   //  get all products from db
-//   app.get('/product', async(req, res) => {
-//     let size = parseInt(req.query.size) || 6;
-//     let page = parseInt(req.query.page) || 1;
-//     let skip = (page - 1) * size;
-//     const search = req.query.search ? String(req.query.search) : '';
-//     const filter = req.query;
-//     const type = req.query.type;
-//     const query = search 
-//         ? { productName: { $regex: search, $options: 'i' } } 
-//         : {};
-//         if(type) query = {category: filter}
-//     const options = {
-//       sort: {
-//         price: filter.sort === 'asc' ? 1: -1
-//       }
-//     }
-
-//     try {
-//         const result = await productsCollection.find(query, options).skip(skip).limit(size).toArray();
-//         res.send(result);
-//     } catch (error) {
-//         console.error("Failed to fetch products:", error);
-//         res.status(500).send({ message: "Internal Server Error" });
-//     }
-// });
-
 app.get('/product', async (req, res) => {
   let size = parseInt(req.query.size) || 6;
   let page = parseInt(req.query.page) || 1;
   let skip = (page - 1) * size;
   const search = req.query.search ? String(req.query.search) : '';
   const type = req.query.type;
+  const brand = req.query.brand;
   const sortOrder = req.query.sort === 'asc' ? 1 : -1;
 
   // Initialize the query object
@@ -68,6 +43,9 @@ app.get('/product', async (req, res) => {
   // Modify the query object if type (category) is present
   if (type) {
       query.category = type;
+  }
+  if(brand) {
+    query.brandName = brand;
   }
 
   // Define the sorting options
@@ -87,13 +65,16 @@ app.get('/product', async (req, res) => {
 });
 
 
-
 // product count for pagination
   app.get('/product-count', async(req, res) => {
     const type = req.query.type;
+    const brand = req.query.brand;
     let query = {};
     if (type) {
       query.category = type;
+  }
+  if(brand) {
+    query.brandName = brand;
   }
     const count = await productsCollection.countDocuments(query);
     res.send({count});

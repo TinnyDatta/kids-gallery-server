@@ -52,7 +52,7 @@ app.get('/product', async (req, res) => {
   // Add price range filtering
   query.price = { $gte: minPrice, $lte: maxPrice };
 
-  // Set sorting options
+  // sort option
   let sortOptions = {};
   if (sort === 'price') {
     sortOptions.price = sortOrder;

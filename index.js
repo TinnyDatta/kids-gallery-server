@@ -35,50 +35,67 @@ app.get('/product', async (req, res) => {
   const search = req.query.search ? String(req.query.search) : '';
   const type = req.query.type;
   const brand = req.query.brand;
-  const sortOrder = req.query.sort === 'asc' ? 1 : -1;
+  const sort = req.query.sort;
+  const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1; // Changed to handle sortOrder
+  const minPrice = parseFloat(req.query.minPrice) || 0;
+  const maxPrice = parseFloat(req.query.maxPrice) || Infinity;
 
   // Initialize the query object
   let query = search ? { productName: { $regex: search, $options: 'i' } } : {};
 
-  // Modify the query object if type (category) is present
   if (type) {
-      query.category = type;
+    query.category = type;
   }
-  if(brand) {
+  if (brand) {
     query.brandName = brand;
   }
+  // Add price range filtering
+  query.price = { $gte: minPrice, $lte: maxPrice };
 
-  // Define the sorting options
-  const options = {
-      sort: {
-          price: sortOrder
-      }
-  };
+  // Set sorting options
+  let sortOptions = {};
+  if (sort === 'price') {
+    sortOptions.price = sortOrder;
+  } else if (sort === 'date') {
+    sortOptions.creationDate = sortOrder;
+  }
 
   try {
-      const result = await productsCollection.find(query, options).skip(skip).limit(size).toArray();
-      res.send(result);
+    const result = await productsCollection.find(query).sort(sortOptions).skip(skip).limit(size).toArray();
+    res.send(result);
   } catch (error) {
-      console.error("Failed to fetch products:", error);
-      res.status(500).send({ message: "Internal Server Error" });
+    console.error("Failed to fetch products:", error);
+    res.status(500).send({ message: "Internal Server Error" });
   }
 });
 
-
 // product count for pagination
-  app.get('/product-count', async(req, res) => {
-    const type = req.query.type;
-    const brand = req.query.brand;
-    let query = {};
-    if (type) {
-      query.category = type;
+app.get('/product-count', async (req, res) => {
+  const type = req.query.type;
+  const brand = req.query.brand;
+  const minPrice = parseFloat(req.query.minPrice) || 0;
+  const maxPrice = parseFloat(req.query.maxPrice) || Infinity;
+
+  // Initialize the query object
+  let query = {};
+  
+  if (type) {
+    query.category = type;
   }
-  if(brand) {
+  if (brand) {
     query.brandName = brand;
   }
+  // Add price range filtering
+  query.price = { $gte: minPrice, $lte: maxPrice };
+
+  try {
     const count = await productsCollection.countDocuments(query);
-    res.send({count});
-  })
+    res.send({ count });
+  } catch (error) {
+    console.error("Failed to fetch product count:", error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+});
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
